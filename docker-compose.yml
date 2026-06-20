@@ -1,11 +1,6 @@
 version: '3.8'
 
-# Cloud-Native Monitoring Platform
-# Author: Moaz
-# Description: Production-ready monitoring stack
-
 services:
-  # Metrics collection and storage
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -14,12 +9,12 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml
       - ./prometheus/data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=15d'
 
-  # Visualization dashboard
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -33,7 +28,6 @@ services:
     depends_on:
       - prometheus
 
-  # Alert management
   alertmanager:
     image: prom/alertmanager:latest
     container_name: alertmanager
@@ -43,7 +37,6 @@ services:
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
 
-  # System metrics exporter
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
