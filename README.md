@@ -23,4 +23,5 @@ docker-compose up -d
 - Prometheus: http://localhost:9090
 - Alertmanager: http://localhost:9093
 
-## Author--> Moaz — DevOps_Eng
+## Author -> Moaz 
+— DevOps Eng
