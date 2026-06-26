@@ -1,92 +1,140 @@
-
-> # Cloud-Native Monitoring Platform
-### Components
- Pometheus (Port 9090)
-- Prometheus (Port 9090) time-series database
-  - Metrics collection and time-series database
-  - Scrape interval: 15 seconds
-  - Retention: 15 days
-  Grafana (Port 3000)
-- Grafana (Port 3000)ashboard creation
-- Visualization and dashboard creation
-  - Default credentials: admin/admin
-  - Data source: Prometheus
-  Alertmanager (Port 9093)
-- Alertmanager (Port 9093)ment
-  - Alert routing and management
-  - Webhook integration support
-  Node Exporter (Port 9100)
-- Node Exporter (Port 9100)ection
-  - System-level metrics collectiontoring
-  - CPU, Memory, Disk, Network monitoring
-## Quick Start
-
+# Cloud Monitoring Platform
+ 
+A production-ready monitoring stack built with Docker Compose, featuring real-time metrics, alerting, and dashboards — all configured as code.
+ 
+## Stack
+ 
+| Service | Role | Port |
+|---------|------|------|
+| Prometheus | Metrics collection & alerting | 9090 |
+| Grafana | Dashboards & visualization | 3000 |
+| Alertmanager | Alert routing & notifications | 9093 |
+| Node Exporter | Host system metrics | 9100 |
+| cAdvisor | Container metrics | 8080 |
+| Webhook Receiver | Alert webhook handler | 5001 |
+ 
+## Architecture
+ 
+```
+Node Exporter ──┐
+cAdvisor        ├──► Prometheus ──► Alertmanager ──► Webhook Receiver
+Prometheus self ┘         │
+                          ▼
+                       Grafana
+```
+ 
+## Getting Started
+ 
 ### Prerequisites
-> - Docker
+- Docker
 - Docker Compose
-- Linux/Unix environment
-
-### Running
-
-bash
-# Start all services
+### Run
+ 
+```bash
+# Clone the repo
+git clone https://github.com/M0az2/cloud-monitoring-platform.git
+cd cloud-monitoring-platform
+ 
+# Start the stack
 docker compose up -d
-
+ 
+# Check all services are running
+docker compose ps
+```
+ 
+### Access
+ 
+| URL | Credentials |
+|-----|-------------|
+| http://localhost:3000 | admin / admin |
+| http://localhost:9090 | — |
+| http://localhost:9093 | — |
+| http://localhost:5001/health | — |
+ 
+## Features
+ 
+### Grafana Provisioning
+Datasource and dashboards are automatically configured on startup — no manual setup required.
+ 
+Dashboard includes:
+- CPU Usage %
+- Memory Usage %
+- Disk Usage %
+- Available Memory
+- Network RX/TX
+- Service Status (all targets)
+### Alert Rules
+9 alerting rules across 4 groups:
+ 
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| InstanceDown | target unreachable > 1m | critical |
+| HighCPUUsage | CPU > 80% for 5m | warning |
+| CriticalCPUUsage | CPU > 95% for 2m | critical |
+| HighMemoryUsage | Memory > 80% for 5m | warning |
+| CriticalMemoryUsage | Memory > 95% for 2m | critical |
+| DiskSpaceWarning | Disk > 75% for 5m | warning |
+| DiskSpaceCritical | Disk > 90% for 2m | critical |
+| HighNetworkReceive | RX > 100MB/s for 5m | warning |
+ 
+### Webhook Receiver
+A lightweight Flask service that receives alerts from Alertmanager.
+ 
+```bash
+# View received alerts
+curl http://localhost:5001/alerts
+ 
+# Health check
+curl http://localhost:5001/health
+```
+ 
+## CI/CD
+ 
+GitHub Actions runs on every push and PR to `main`:
+ 
+- ✅ Validate `prometheus.yml`
+- ✅ Validate `rules.yml`
+- ✅ Validate `alertmanager.yml`
+- ✅ Validate `docker-compose.yml`
+- ✅ Build webhook-receiver Docker image
+## Project Structure
+ 
+```
+cloud-monitoring-platform/
+├── prometheus/
+│   ├── prometheus.yml        # Scrape configs & alertmanager connection
+│   └── rules.yml             # Alerting rules
+├── grafana/
+│   └── provisioning/
+│       ├── datasources/      # Auto-configured Prometheus datasource
+│       └── dashboards/       # Auto-loaded Node Exporter dashboard
+├── alertmanager/
+│   └── alertmanager.yml      # Alert routing & webhook config
+├── webhook-receiver/
+│   ├── app.py                # Flask webhook handler
+│   ├── Dockerfile
+│   └── requirements.txt
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # Config validation pipeline
+├── docker-compose.yml
+└── .env.example
+```
+ 
+## Useful Commands
+ 
+```bash
+# Start
+docker compose up -d
+ 
+# Stop
+docker compose down
+ 
 # View logs
 docker compose logs -f
-
-# Stop services
-docker compose down
-> ### Access Points
-
-> | Service | URL | Credentials |
-|---------|-----|-------------|
-| Grafana | http://localhost:3000 | admin/admin |
-| Prometheus | http://localhost:9090 | N/A |
-| Alertmanager | http://localhost:9093 | N/A |
-| Node Exporter | http://localhost:9100 | N/A |
-
-## Project Structure
-> ├── prometheus/
-
-│   ├── prometheus.yml       # Prometheus config
-
-│   └── data/                # Time-series database
-
-├── grafana/
-
-│   └── data/                # Grafana database
-
-├── alertmanager/
-
-│   └── alertmanager.yml     # Alertmanager config
-
-├── docker-compose.yml       # Container orchestration
-
-└── README.md               # This file
-## Key Metrics
-> ### Available from Prometheus
-
-- up - Service availability (0 or 1)
-- node_cpu_seconds_total - CPU time spent
-- node_memory_MemAvailable_bytes - Available memory
-- node_filesystem_avail_bytes - Disk space available
-- node_network_receive_bytes_total - Network ingress
-## Configuration
-
-### Prometheus Targets
-
-Edit prometheus/prometheus.yml to add new targets:
-
-yaml
-scrape_configs:
-  - job_name: 'my-service'
-    static_configs:
-      - targets: ['localhost:9090']
-> ### Alerting Rules
-
-Configure alerts in alertmanager/alertmanager.yml. Currently set to send webhooks to http://localhost:5001/.
-
-## Design Decisions
-
-1. Docker Compose - Simplicity and
+ 
+# Restart a service
+docker compose restart grafana
+ 
+# Check status
+docker compose ps
