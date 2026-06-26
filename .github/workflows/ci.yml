@@ -16,16 +16,18 @@ jobs:
       - name: Check prometheus.yml
         run: |
           docker run --rm \
+            --entrypoint promtool \
             -v ${{ github.workspace }}/prometheus:/etc/prometheus \
             prom/prometheus:latest \
-            promtool check config /etc/prometheus/prometheus.yml
+            check config /etc/prometheus/prometheus.yml
 
       - name: Check rules.yml
         run: |
           docker run --rm \
+            --entrypoint promtool \
             -v ${{ github.workspace }}/prometheus:/etc/prometheus \
             prom/prometheus:latest \
-            promtool check rules /etc/prometheus/rules.yml
+            check rules /etc/prometheus/rules.yml
 
   validate-alertmanager:
     name: Alertmanager Config
@@ -36,9 +38,10 @@ jobs:
       - name: Check alertmanager.yml
         run: |
           docker run --rm \
+            --entrypoint amtool \
             -v ${{ github.workspace }}/alertmanager:/etc/alertmanager \
             prom/alertmanager:latest \
-            amtool check-config /etc/alertmanager/alertmanager.yml
+            check-config /etc/alertmanager/alertmanager.yml
 
   validate-compose:
     name: Docker Compose
