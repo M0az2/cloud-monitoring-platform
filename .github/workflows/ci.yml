@@ -1,0 +1,59 @@
+name: CI — Validate Configs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-prometheus:
+    name: Prometheus Config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check prometheus.yml
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/prometheus:/etc/prometheus \
+            prom/prometheus:latest \
+            promtool check config /etc/prometheus/prometheus.yml
+
+      - name: Check rules.yml
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/prometheus:/etc/prometheus \
+            prom/prometheus:latest \
+            promtool check rules /etc/prometheus/rules.yml
+
+  validate-alertmanager:
+    name: Alertmanager Config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check alertmanager.yml
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/alertmanager:/etc/alertmanager \
+            prom/alertmanager:latest \
+            amtool check-config /etc/alertmanager/alertmanager.yml
+
+  validate-compose:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+  build-webhook:
+    name: Build Webhook Receiver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t webhook-receiver ./webhook-receiver
