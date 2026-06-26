@@ -1,5 +1,6 @@
 # Cloud Monitoring Platform
  ![CI](https://github.com/M0az2/cloud-monitoring-platform/actions/workflows/ci.yml/badge.svg)
+
 A production-ready monitoring stack built with Docker Compose, featuring real-time metrics, alerting, and dashboards — all configured as code.
  
 ## Stack
